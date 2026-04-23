@@ -16,7 +16,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-origins = ["*"]
+origins =  ["*"]
+    
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,10 +27,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-@app.get("/")
-def root():
-    return {"mensaje": "API funcionando correctamente"}
 
 app.include_router(usuario_router)
 app.include_router(tipo_solicitud_router)
@@ -43,6 +41,7 @@ app.include_router(programa_router)
 app.include_router(aprobacion_router)
 app.include_router(documento_generado_router)
 app.include_router(estudiante_router)
+
 
 if __name__ == "__main__":
     import uvicorn
