@@ -23,7 +23,6 @@ class NotificacionController:
             )
 
             conn.commit()
-
             return {"resultado": "Notificacion creada"}
 
         except psycopg2.Error as err:
@@ -47,7 +46,6 @@ class NotificacionController:
             result = cursor.fetchone()
 
             if result:
-
                 content = {
                     'id_notificacion': result[0],
                     'id_usuario': result[1],
@@ -55,9 +53,7 @@ class NotificacionController:
                     'fecha_envio': result[3],
                     'leida': result[4]
                 }
-
                 return jsonable_encoder(content)
-
             else:
                 raise HTTPException(status_code=404, detail="Notificacion not found")
 
@@ -80,7 +76,6 @@ class NotificacionController:
             payload = []
 
             for data in result:
-
                 content = {
                     'id_notificacion': data[0],
                     'id_usuario': data[1],
@@ -88,7 +83,6 @@ class NotificacionController:
                     'fecha_envio': data[3],
                     'leida': data[4]
                 }
-
                 payload.append(content)
 
             if result:
@@ -99,6 +93,64 @@ class NotificacionController:
         except psycopg2.Error as err:
             print(err)
             conn.rollback()
+
+        finally:
+            conn.close()
+
+
+    def get_notificaciones_usuario(self, usuario_id: int):
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+
+            cursor.execute(
+                "SELECT * FROM notificacion WHERE id_usuario = %s ORDER BY fecha_envio DESC",
+                (usuario_id,)
+            )
+
+            result = cursor.fetchall()
+            payload = []
+
+            for data in result:
+                payload.append({
+                    'id_notificacion': data[0],
+                    'id_usuario': data[1],
+                    'mensaje': data[2],
+                    'fecha_envio': data[3],
+                    'leida': data[4]
+                })
+
+            return {"resultado": jsonable_encoder(payload)}
+
+        except psycopg2.Error as err:
+            print(err)
+            conn.rollback()
+
+        finally:
+            conn.close()
+
+
+    def marcar_leida(self, notificacion_id: int):
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+
+            cursor.execute(
+                "UPDATE notificacion SET leida=TRUE WHERE id_notificacion=%s",
+                (notificacion_id,)
+            )
+
+            conn.commit()
+
+            if cursor.rowcount == 0:
+                raise HTTPException(status_code=404, detail="Notificacion not found")
+
+            return {"mensaje": "Notificacion marcada como leida"}
+
+        except psycopg2.Error as err:
+            print(err)
+            conn.rollback()
+            raise HTTPException(status_code=500, detail="Database error")
 
         finally:
             conn.close()
